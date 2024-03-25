@@ -3,8 +3,6 @@ package main
 import (
 	"flag"
 	"log"
-	"os"
-	"path/filepath"
 
 	"github.com/therealfakemoot/go-obsidian"
 )
@@ -20,14 +18,7 @@ func main() {
 
 	flag.Parse()
 
-	absRoot, err := filepath.Abs(root)
-	if err != nil {
-		log.Fatalf("couldn't transform absolute path: %s\n", err)
-	}
-
-	rootFS := os.DirFS(absRoot)
-
-	_, err = obsidian.NewVault(rootFS)
+	_, err := obsidian.NewVault(root)
 	if err != nil {
 		log.Fatalf("couldn't walk vault: %s\n", err)
 	}
