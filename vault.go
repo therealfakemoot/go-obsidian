@@ -3,17 +3,19 @@ package obsidian
 import (
 	"fmt"
 	"io/fs"
-	"log"
 	"path/filepath"
 	"strings"
+
+	"github.com/yuin/goldmark"
+	"go.abhg.dev/goldmark/frontmatter"
 )
 
 type Vault struct {
 	Notes map[string]Note
+	gm    goldmark.Markdown
 }
 
 func (v *Vault) walk(path string, d fs.DirEntry, err error) error {
-	log.Printf("walking path %q\n", path)
 	if strings.HasSuffix(path, ".md") && !d.IsDir() {
 		var n Note
 		absPath, err := filepath.Abs(path)
@@ -28,7 +30,6 @@ func (v *Vault) walk(path string, d fs.DirEntry, err error) error {
 		n.Name = filename[:len(filename)-3]
 
 		v.Notes[path] = n
-		log.Printf("%#+v\n", n)
 	}
 
 	return nil
@@ -37,6 +38,12 @@ func (v *Vault) walk(path string, d fs.DirEntry, err error) error {
 func NewVault(root fs.FS) (*Vault, error) {
 	v := &Vault{}
 	v.Notes = make(map[string]Note)
+	v.gm = goldmark.New(
+		goldmark.WithExtensions(
+			// ...
+			&frontmatter.Extender{},
+		),
+	)
 
 	err := fs.WalkDir(root, ".", v.walk)
 	if err != nil {

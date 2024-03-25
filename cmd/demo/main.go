@@ -27,10 +27,8 @@ func main() {
 
 	rootFS := os.DirFS(absRoot)
 
-	v, err := obsidian.NewVault(rootFS)
+	_, err = obsidian.NewVault(rootFS)
 	if err != nil {
 		log.Fatalf("couldn't walk vault: %s\n", err)
 	}
-
-	log.Printf("%#+v\n", v)
 }
