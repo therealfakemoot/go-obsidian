@@ -24,7 +24,7 @@ type Vault struct {
 func (v *Vault) walk(path string, d fs.DirEntry, err error) error {
 	if strings.HasSuffix(path, ".md") && !d.IsDir() {
 		var n Note
-		absPath, err := filepath.Abs(path)
+		absPath := filepath.Join(v.Root, path)
 		if err != nil {
 			return fmt.Errorf("could not build absolute path for %q: %w", path, err)
 		}
