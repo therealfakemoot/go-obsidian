@@ -11,7 +11,8 @@ import (
 	"strings"
 
 	"github.com/yuin/goldmark"
-	"github.com/yuin/goldmark/text"
+	"github.com/yuin/goldmark/parser"
+	// "github.com/yuin/goldmark/text"
 	"go.abhg.dev/goldmark/frontmatter"
 )
 
@@ -42,10 +43,29 @@ func (v *Vault) walk(path string, d fs.DirEntry, err error) error {
 		var b bytes.Buffer
 		io.Copy(&b, f)
 
-		root := v.gm.Parser().Parse(text.NewReader(b.Bytes()))
-		doc := root.OwnerDocument()
-		meta := doc.Meta()
+		ctx := parser.NewContext()
+		v.gm.Convert(b.Bytes(), io.Discard, parser.WithContext(ctx))
+
+		raw := frontmatter.Get(ctx)
+
+		var meta NoteMeta
+		if err := raw.Decode(&meta); err != nil {
+			return fmt.Errorf("couldn't decode frontmatter for %q: %w", path, err)
+		}
+
 		log.Printf("%#+v\n", meta)
+		/*
+			doc := root.OwnerDocument()
+			meta := doc.Meta()
+			m2 := make(map[string][]string)
+			for k, values := range meta {
+				for _, v := range values {
+					m2[k] = append(m2[k], v)
+				}
+			}
+			// log.Printf("%#+v\n", meta["aliases"])
+			log.Printf("%#+v\n", m2)
+		*/
 
 		v.Notes[path] = n
 	}
