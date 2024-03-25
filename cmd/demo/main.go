@@ -18,8 +18,12 @@ func main() {
 
 	flag.Parse()
 
-	_, err := obsidian.NewVault(root)
+	v, err := obsidian.NewVault(root)
 	if err != nil {
 		log.Fatalf("couldn't walk vault: %s\n", err)
+	}
+
+	for k, v := range v.Notes {
+		log.Printf("indexed note at path %q: %#v\n", k, v)
 	}
 }

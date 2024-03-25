@@ -2,6 +2,7 @@ package obsidian
 
 type NoteMeta struct {
 	Aliases    []string
-	CssClasses string
+	CSSClasses []string
 	Tags       []string
+	Date       string
 }

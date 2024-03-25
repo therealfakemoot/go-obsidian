@@ -9,6 +9,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/yuin/goldmark"
 	"github.com/yuin/goldmark/parser"
@@ -53,20 +54,16 @@ func (v *Vault) walk(path string, d fs.DirEntry, err error) error {
 			return fmt.Errorf("couldn't decode frontmatter for %q: %w", path, err)
 		}
 
-		log.Printf("%#+v\n", meta)
-		/*
-			doc := root.OwnerDocument()
-			meta := doc.Meta()
-			m2 := make(map[string][]string)
-			for k, values := range meta {
-				for _, v := range values {
-					m2[k] = append(m2[k], v)
-				}
-			}
-			// log.Printf("%#+v\n", meta["aliases"])
-			log.Printf("%#+v\n", m2)
-		*/
+		n.Tags = meta.Tags
+		n.Aliases = meta.Aliases
+		n.CSSClasses = meta.CSSClasses
 
+		stamp, err := time.Parse("2006-01-02", meta.Date)
+		if err != nil {
+			return fmt.Errorf("could not parse Date field %q: %w", meta.Date, err)
+		}
+
+		n.Date = stamp
 		v.Notes[path] = n
 	}
 

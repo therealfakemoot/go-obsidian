@@ -1,11 +1,15 @@
 package obsidian
 
 import (
-// "go.abhg.dev/goldmark/frontmatter"
+	"time"
+	// "go.abhg.dev/goldmark/frontmatter"
 )
 
 type Note struct {
 	Name, Path string
-	Tags       []Tag
+	Tags       []string
+	Aliases    []string
+	CSSClasses []string
+	Date       time.Time
 	Properties any
 }
