@@ -62,28 +62,27 @@ func (v *Vault) walk(path string, d fs.DirEntry, err error) error {
 		v.gm.Convert(b.Bytes(), io.Discard, parser.WithContext(ctx))
 
 		raw := frontmatter.Get(ctx)
-		if raw == nil {
-			return nil
-		}
+		if raw != nil {
 
-		var meta NoteMeta
-		if err := raw.Decode(&meta); err != nil {
-			return fmt.Errorf("couldn't decode frontmatter for %q: %w", path, err)
-		}
-
-		n.Tags = meta.Tags
-		n.Aliases = meta.Aliases
-		n.CSSClasses = meta.CSSClasses
-
-		var stamp time.Time
-		if meta.Date != "" {
-			stamp, err = time.Parse("2006-01-02", meta.Date)
-			if err != nil {
-				return fmt.Errorf("could not parse Date field %q: %w", meta.Date, err)
+			var meta NoteMeta
+			if err := raw.Decode(&meta); err != nil {
+				return fmt.Errorf("couldn't decode frontmatter for %q: %w", path, err)
 			}
-		}
 
-		n.Date = stamp
+			n.Tags = meta.Tags
+			n.Aliases = meta.Aliases
+			n.CSSClasses = meta.CSSClasses
+
+			var stamp time.Time
+			if meta.Date != "" {
+				stamp, err = time.Parse("2006-01-02", meta.Date)
+				if err != nil {
+					return fmt.Errorf("could not parse Date field %q: %w", meta.Date, err)
+				}
+			}
+
+			n.Date = stamp
+		}
 		v.Notes[path] = n
 	}
 
