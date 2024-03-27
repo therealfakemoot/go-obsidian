@@ -83,7 +83,7 @@ func (v *Vault) walk(path string, d fs.DirEntry, err error) error {
 
 			n.Date = stamp
 		}
-		v.Notes[path] = n
+		v.Notes[n.Name] = n
 	}
 
 	return nil
