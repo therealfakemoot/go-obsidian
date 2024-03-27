@@ -13,18 +13,32 @@ import (
 
 	"github.com/yuin/goldmark"
 	"github.com/yuin/goldmark/parser"
-	// "github.com/yuin/goldmark/text"
 	"go.abhg.dev/goldmark/frontmatter"
+	"go.uber.org/zap"
+	"go.uber.org/zap/zapcore"
 )
 
 type Vault struct {
-	Root  string
-	Notes map[string]Note
-	gm    goldmark.Markdown
+	Root   string
+	Notes  map[string]Note
+	gm     goldmark.Markdown
+	Logger *zap.Logger
 }
 
 func (v *Vault) walk(path string, d fs.DirEntry, err error) error {
+	v.Logger.Info("walking",
+		zap.String("path", path),
+	)
+
+	if d.IsDir() && d.Name() == ".git" {
+		return filepath.SkipDir
+	}
+
 	if strings.HasSuffix(path, ".md") && !d.IsDir() {
+		v.Logger.Info("found note",
+			zap.String("filename", path),
+		)
+
 		var n Note
 		absPath := filepath.Join(v.Root, path)
 		if err != nil {
@@ -48,6 +62,9 @@ func (v *Vault) walk(path string, d fs.DirEntry, err error) error {
 		v.gm.Convert(b.Bytes(), io.Discard, parser.WithContext(ctx))
 
 		raw := frontmatter.Get(ctx)
+		if raw == nil {
+			return nil
+		}
 
 		var meta NoteMeta
 		if err := raw.Decode(&meta); err != nil {
@@ -58,9 +75,12 @@ func (v *Vault) walk(path string, d fs.DirEntry, err error) error {
 		n.Aliases = meta.Aliases
 		n.CSSClasses = meta.CSSClasses
 
-		stamp, err := time.Parse("2006-01-02", meta.Date)
-		if err != nil {
-			return fmt.Errorf("could not parse Date field %q: %w", meta.Date, err)
+		var stamp time.Time
+		if meta.Date != "" {
+			stamp, err = time.Parse("2006-01-02", meta.Date)
+			if err != nil {
+				return fmt.Errorf("could not parse Date field %q: %w", meta.Date, err)
+			}
 		}
 
 		n.Date = stamp
@@ -71,16 +91,27 @@ func (v *Vault) walk(path string, d fs.DirEntry, err error) error {
 }
 
 func NewVault(root string) (*Vault, error) {
+	prodConfig := zap.NewProductionConfig()
+	prodConfig.Encoding = "console"
+	prodConfig.EncoderConfig.EncodeTime = zapcore.ISO8601TimeEncoder
+	prodConfig.EncoderConfig.EncodeDuration = zapcore.StringDurationEncoder
+	logger, _ := prodConfig.Build()
+
+	logger.Info("entering NewVault()")
+
 	v := &Vault{}
+	v.Logger = logger
 	v.Root = root
 
 	v.Notes = make(map[string]Note)
+	v.Logger.Info("building goldmark")
 	v.gm = goldmark.New(
 		goldmark.WithExtensions(&frontmatter.Extender{
 			Mode: frontmatter.SetMetadata,
 		}),
 	)
 
+	v.Logger.Info("building absRoot")
 	absRoot, err := filepath.Abs(v.Root)
 	if err != nil {
 		log.Fatalf("couldn't transform absolute path: %s\n", err)

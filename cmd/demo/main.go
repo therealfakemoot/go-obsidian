@@ -4,6 +4,8 @@ import (
 	"flag"
 	"log"
 
+	"go.uber.org/zap"
+
 	"github.com/therealfakemoot/go-obsidian"
 )
 
@@ -18,12 +20,17 @@ func main() {
 
 	flag.Parse()
 
-	v, err := obsidian.NewVault(root)
+	vault, err := obsidian.NewVault(root)
 	if err != nil {
 		log.Fatalf("couldn't walk vault: %s\n", err)
 	}
 
-	for k, v := range v.Notes {
-		log.Printf("indexed note at path %q: %#v\n", k, v)
+	defer vault.Logger.Sync()
+
+	for k, v := range vault.Notes {
+		vault.Logger.Info("indexed note",
+			zap.String("path", k),
+			zap.Any("note", v),
+		)
 	}
 }
