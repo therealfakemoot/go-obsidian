@@ -50,6 +50,7 @@ func (v *Vault) walk(path string, d fs.DirEntry, err error) error {
 			return fmt.Errorf("could not split file path: %w", err)
 		}
 		n.Name = filename[:len(filename)-3]
+		n.Names = append(n.Names, n.Name)
 
 		f, err := os.Open(absPath)
 		if err != nil {
@@ -72,6 +73,10 @@ func (v *Vault) walk(path string, d fs.DirEntry, err error) error {
 			n.Tags = meta.Tags
 			n.Aliases = meta.Aliases
 			n.CSSClasses = meta.CSSClasses
+
+			for _, alias := range n.Aliases {
+				n.Names = append(n.Names, alias)
+			}
 
 			var stamp time.Time
 			if meta.Date != "" {

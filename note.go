@@ -7,6 +7,7 @@ import (
 
 type Note struct {
 	Name, Path string
+	Names      []string
 	Tags       []string
 	Aliases    []string
 	CSSClasses []string
