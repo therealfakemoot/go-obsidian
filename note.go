@@ -14,5 +14,10 @@ type Note struct {
 	Aliases    []string
 	CSSClasses []string
 	Date       time.Time
+	Links      []Link
 	Properties any
+}
+
+type Link struct {
+	*cgraph.Edge
 }

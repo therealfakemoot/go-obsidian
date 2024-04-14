@@ -42,6 +42,7 @@ func (v *Vault) walk(path string, d fs.DirEntry, err error) error {
 		)
 
 		var n Note
+
 		absPath := filepath.Join(v.Root, path)
 		if err != nil {
 			return fmt.Errorf("could not build absolute path for %q: %w", path, err)
@@ -52,6 +53,12 @@ func (v *Vault) walk(path string, d fs.DirEntry, err error) error {
 			return fmt.Errorf("could not split file path: %w", err)
 		}
 		n.Name = filename[:len(filename)-3]
+		node, err := v.Graph.CreateNode(n.Name)
+		if err != nil {
+			return fmt.Errorf("couldn't create graph node for %q: %w", path, err)
+		}
+
+		n.Node = node
 		n.Names = append(n.Names, n.Name)
 
 		f, err := os.Open(absPath)
