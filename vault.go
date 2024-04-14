@@ -70,7 +70,26 @@ func (v *Vault) walk(path string, d fs.DirEntry, err error) error {
 		io.Copy(&b, f)
 
 		ctx := parser.NewContext()
-		v.gm.Convert(b.Bytes(), io.Discard, parser.WithContext(ctx))
+		links := LinkCollector{
+			Links:  make([]*wikilink.Node, 0),
+			Logger: v.Logger.Named("link-collector").With(zap.String("name", n.Name)),
+		}
+		gm := goldmark.New(
+			goldmark.WithExtensions(
+				&frontmatter.Extender{
+					Mode: frontmatter.SetMetadata,
+				},
+				&wikilink.Extender{
+					Resolver: &links,
+				},
+			),
+		)
+		v.Logger.Info("links in note",
+			zap.String("name", n.Name),
+			zap.Any("links", links.Links),
+		)
+
+		gm.Convert(b.Bytes(), io.Discard, parser.WithContext(ctx))
 
 		raw := frontmatter.Get(ctx)
 		if raw != nil {
@@ -119,17 +138,6 @@ func NewVault(root string, g *cgraph.Graph) (*Vault, error) {
 
 	v.Notes = make(map[string]Note)
 	v.Logger.Info("building goldmark")
-	v.gm = goldmark.New(
-		goldmark.WithExtensions(
-			&frontmatter.Extender{
-				Mode: frontmatter.SetMetadata,
-			},
-			&wikilink.Extender{
-				Resolver: v,
-			},
-		),
-	)
-
 	v.Logger.Info("building absRoot")
 	absRoot, err := filepath.Abs(v.Root)
 	if err != nil {
@@ -144,8 +152,16 @@ func NewVault(root string, g *cgraph.Graph) (*Vault, error) {
 	return v, nil
 }
 
-func (v *Vault) ResolveWikilink(n *wikilink.Node) ([]byte, error) {
-	b := make([]byte, 0)
+type LinkCollector struct {
+	Links  []*wikilink.Node
+	Logger *zap.Logger
+}
 
-	return b, nil
+func (lc *LinkCollector) ResolveWikilink(n *wikilink.Node) ([]byte, error) {
+	lc.Logger.Info("received node",
+		zap.Any("node", n),
+	)
+	lc.Links = append(lc.Links, n)
+
+	return n.Target, nil
 }
