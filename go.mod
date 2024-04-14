@@ -6,6 +6,7 @@ require (
 	github.com/goccy/go-graphviz v0.1.2
 	github.com/yuin/goldmark v1.7.0
 	go.abhg.dev/goldmark/frontmatter v0.2.0
+	go.abhg.dev/goldmark/wikilink v0.5.0
 	go.uber.org/zap v1.27.0
 )
 

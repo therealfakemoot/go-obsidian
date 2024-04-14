@@ -15,6 +15,7 @@ import (
 	"github.com/yuin/goldmark"
 	"github.com/yuin/goldmark/parser"
 	"go.abhg.dev/goldmark/frontmatter"
+	"go.abhg.dev/goldmark/wikilink"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 )
@@ -119,9 +120,14 @@ func NewVault(root string, g *cgraph.Graph) (*Vault, error) {
 	v.Notes = make(map[string]Note)
 	v.Logger.Info("building goldmark")
 	v.gm = goldmark.New(
-		goldmark.WithExtensions(&frontmatter.Extender{
-			Mode: frontmatter.SetMetadata,
-		}),
+		goldmark.WithExtensions(
+			&frontmatter.Extender{
+				Mode: frontmatter.SetMetadata,
+			},
+			&wikilink.Extender{
+				Resolver: v,
+			},
+		),
 	)
 
 	v.Logger.Info("building absRoot")
@@ -136,4 +142,10 @@ func NewVault(root string, g *cgraph.Graph) (*Vault, error) {
 		return v, fmt.Errorf("error walking vault: %w", err)
 	}
 	return v, nil
+}
+
+func (v *Vault) ResolveWikilink(n *wikilink.Node) ([]byte, error) {
+	b := make([]byte, 0)
+
+	return b, nil
 }
