@@ -2,10 +2,12 @@ package obsidian
 
 import (
 	"time"
-	// "go.abhg.dev/goldmark/frontmatter"
+
+	"github.com/goccy/go-graphviz/cgraph"
 )
 
 type Note struct {
+	*cgraph.Node
 	Name, Path string
 	Names      []string
 	Tags       []string

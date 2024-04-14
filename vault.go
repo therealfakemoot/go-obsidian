@@ -11,6 +11,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/goccy/go-graphviz/cgraph"
 	"github.com/yuin/goldmark"
 	"github.com/yuin/goldmark/parser"
 	"go.abhg.dev/goldmark/frontmatter"
@@ -19,6 +20,7 @@ import (
 )
 
 type Vault struct {
+	*cgraph.Graph
 	Root   string
 	Notes  map[string]Note
 	gm     goldmark.Markdown
@@ -94,7 +96,7 @@ func (v *Vault) walk(path string, d fs.DirEntry, err error) error {
 	return nil
 }
 
-func NewVault(root string) (*Vault, error) {
+func NewVault(root string, g *cgraph.Graph) (*Vault, error) {
 	prodConfig := zap.NewProductionConfig()
 	prodConfig.Encoding = "console"
 	prodConfig.EncoderConfig.EncodeTime = zapcore.ISO8601TimeEncoder
@@ -103,7 +105,7 @@ func NewVault(root string) (*Vault, error) {
 
 	logger.Info("entering NewVault()")
 
-	v := &Vault{}
+	v := &Vault{Graph: g}
 	v.Logger = logger
 	v.Root = root
 

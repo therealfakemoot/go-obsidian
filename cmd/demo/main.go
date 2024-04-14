@@ -4,7 +4,7 @@ import (
 	"flag"
 	"log"
 
-	"go.uber.org/zap"
+	"github.com/goccy/go-graphviz"
 
 	"github.com/therealfakemoot/go-obsidian"
 )
@@ -20,17 +20,31 @@ func main() {
 
 	flag.Parse()
 
-	vault, err := obsidian.NewVault(root)
+	g := graphviz.New()
+	graph, err := g.Graph()
+	if err != nil {
+		log.Fatalf("couldn't create graphviz graph: %s\n", err)
+	}
+
+	defer func() {
+		if err := graph.Close(); err != nil {
+			log.Fatalf("error closing graph: %s\n", err)
+		}
+	}()
+
+	vault, err := obsidian.NewVault(root, graph)
 	if err != nil {
 		log.Fatalf("couldn't walk vault: %s\n", err)
 	}
 
 	defer vault.Logger.Sync()
 
-	for k, v := range vault.Notes {
-		vault.Logger.Info("indexed note",
-			zap.String("path", k),
-			zap.Any("note", v),
-		)
-	}
+	/*
+		for k, v := range vault.Notes {
+			vault.Logger.Info("indexed note",
+				zap.String("path", k),
+				zap.Any("note", v),
+			)
+		}
+	*/
 }
