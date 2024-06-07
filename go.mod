@@ -1,6 +1,6 @@
 module github.com/therealfakemoot/go-obsidian
 
-go 1.21.6
+go 1.22.0
 
 require (
 	github.com/goccy/go-graphviz v0.1.2
